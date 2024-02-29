@@ -17,9 +17,22 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const loadResp = await loadModel(commandArgs[0]);
 		return new Response(`${loadResp.status} loading model ${commandArgs[0]}`);
 	} else if (command === '/use') {
-		cookies.set('selectedModel', commandArgs[0], {
-			path: '/'
+		const listResp = await listModels();
+		const requestedModel = commandArgs[0];
+		const matchingLoadedModel = listResp.models.find((model) => {
+			return (
+				model.name === (requestedModel.includes(':') ? requestedModel : `${requestedModel}:latest`)
+			);
 		});
+
+		if (matchingLoadedModel) {
+			cookies.set('selectedModel', commandArgs[0], {
+				path: '/'
+			});
+			return new Response(`Selected model ${commandArgs[0]}`);
+		} else {
+			return new Response(`Model ${commandArgs[0]} is not loaded`);
+		}
 	} else if (command === '/help') {
 		return new Response(
 			`Available commands:
