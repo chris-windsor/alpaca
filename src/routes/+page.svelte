@@ -5,11 +5,24 @@
 	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
 
 	let prompt: string = '';
+	let lastPrompt: string = '';
 	let messageHistory: string[] = [];
 	let currentResponseChunks: string[] = [];
 	let errorDescription: string = '';
 
+	function pushLastChunkedMessage() {
+		if (currentResponseChunks.length) {
+			messageHistory.push(currentResponseChunks.join(''));
+		}
+		messageHistory.push(prompt);
+		messageHistory = messageHistory;
+
+		currentResponseChunks = [];
+	}
+
 	async function submitInput() {
+		pushLastChunkedMessage();
+
 		if (prompt.startsWith('/')) {
 			await sendCommand();
 		} else {
@@ -23,11 +36,12 @@
 			messageHistory = messageHistory;
 		}
 
+		lastPrompt = prompt;
+		prompt = '';
 		const resp = await fetch('/api/command', {
 			method: 'POST',
-			body: prompt
+			body: lastPrompt
 		});
-		prompt = '';
 
 		const parsedResponse = await resp.json();
 		messageHistory.push(JSON.stringify(parsedResponse, null, 2));
@@ -35,18 +49,12 @@
 	}
 
 	async function sendPrompt() {
-		if (currentResponseChunks.length) {
-			messageHistory.push(currentResponseChunks.join(''));
-		}
-		messageHistory.push(prompt);
-		messageHistory = messageHistory;
-
-		currentResponseChunks = [];
+		lastPrompt = prompt;
+		prompt = '';
 		const response = await fetch('/api/message', {
 			method: 'POST',
-			body: prompt
+			body: lastPrompt
 		});
-		prompt = '';
 
 		if (!response.body || !response.ok) {
 			return (errorDescription = 'Something went wrong. Please try again later.'), false;
@@ -71,14 +79,14 @@
 		{/if}
 		<div class="w-screen flex-1 overflow-y-scroll px-4">
 			{#each messageHistory as message}
-				<pre class="mb-2 border-b-2">{message}</pre>
+				<p class="mb-2 whitespace-pre-line border-b-2">{message}</p>
 			{/each}
-			<pre>
+			<p class="whitespace-pre-line">
 				{#each currentResponseChunks as chunk}
 					{chunk}
 				{/each}
-			</pre>
+			</p>
 		</div>
-		<PromptInput bind:prompt on:submit={submitInput} />
+		<PromptInput bind:prompt {lastPrompt} on:submit={submitInput} />
 	</section>
 </main>

@@ -3,10 +3,12 @@ import { Ollama, type Message } from 'ollama';
 
 const ollama = new Ollama({ host: PUBLIC_OLLAMA_HOST });
 
-export async function sendMessage(message: Message) {
+type PromptRequest = { model: string; message: Message };
+
+export async function sendMessage(promptRequest: PromptRequest) {
 	return await ollama.chat({
-		model: 'llama2',
-		messages: [message],
+		model: promptRequest.model,
+		messages: [promptRequest.message],
 		stream: true
 	});
 }
