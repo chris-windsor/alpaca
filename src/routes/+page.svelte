@@ -3,12 +3,14 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import PromptInput from '$lib/components/PromptInput.svelte';
 	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
+	import ProcessingAlert from '$lib/components/ProcessingAlert.svelte';
 
 	let prompt: string = '';
 	let lastPrompt: string = '';
 	let messageHistory: string[] = [];
 	let currentResponseChunks: string[] = [];
 	let errorDescription: string = '';
+	let processingDescription: string = '';
 
 	function pushLastChunkedMessage() {
 		if (currentResponseChunks.length) {
@@ -31,20 +33,25 @@
 	}
 
 	async function sendCommand() {
-		if (prompt.startsWith('/help')) {
-			messageHistory.push('Available commands:\n/list \n/load <modelName> ');
-			messageHistory = messageHistory;
-		}
-
 		lastPrompt = prompt;
 		prompt = '';
+		const processingBannerTimer = setTimeout(() => {
+			processingDescription = 'Executing command...';
+		}, 750);
 		const resp = await fetch('/api/command', {
 			method: 'POST',
 			body: lastPrompt
 		});
+		processingDescription = '';
+		clearTimeout(processingBannerTimer);
 
-		const parsedResponse = await resp.json();
-		messageHistory.push(JSON.stringify(parsedResponse, null, 2));
+		if (resp.ok) {
+			const commandResponse = await resp.text();
+			messageHistory.push(commandResponse);
+		} else {
+			const commandResponse = await resp.json();
+			messageHistory.push(commandResponse.message);
+		}
 		messageHistory = messageHistory;
 	}
 
@@ -76,6 +83,9 @@
 	<section class="flex h-[calc(100vh-64px)] w-full flex-col items-center justify-center p-4">
 		{#if errorDescription.length}
 			<ErrorAlert {errorDescription} />
+		{/if}
+		{#if processingDescription.length}
+			<ProcessingAlert {processingDescription} />
 		{/if}
 		<div class="w-screen flex-1 overflow-y-scroll px-4">
 			{#each messageHistory as message}

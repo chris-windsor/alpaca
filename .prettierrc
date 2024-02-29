@@ -10,6 +10,13 @@
 			"options": {
 				"parser": "svelte"
 			}
+		},
+		{
+			"files": "./src/lib/components/ui/**",
+			"options": {
+				"singleQuote": false,
+				"trailingComma": "es5"
+			}
 		}
 	]
 }
