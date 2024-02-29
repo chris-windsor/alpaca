@@ -10,3 +10,13 @@ export async function sendMessage(message: Message) {
 		stream: true
 	});
 }
+
+export async function listModels() {
+	return await ollama.list();
+}
+
+export async function loadModel(model: string) {
+	return await ollama.pull({
+		model: model
+	});
+}

@@ -8,7 +8,7 @@
 <div class="flex w-screen flex-col border-t-2 p-4">
 	<form on:submit|preventDefault class="space-y-4">
 		<Textarea
-			placeholder="prompt"
+			placeholder="prompt or /help"
 			class="flex-1 p-4 md:min-h-[120px] lg:min-h-[180px]"
 			bind:value={prompt}
 		/>

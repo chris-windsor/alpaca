@@ -9,7 +9,32 @@
 	let currentResponseChunks: string[] = [];
 	let errorDescription: string = '';
 
-	async function send() {
+	async function submitInput() {
+		if (prompt.startsWith('/')) {
+			await sendCommand();
+		} else {
+			await sendPrompt();
+		}
+	}
+
+	async function sendCommand() {
+		if (prompt.startsWith('/help')) {
+			messageHistory.push('Available commands:\n/list \n/load <modelName> ');
+			messageHistory = messageHistory;
+		}
+
+		const resp = await fetch('/api/command', {
+			method: 'POST',
+			body: prompt
+		});
+		prompt = '';
+
+		const parsedResponse = await resp.json();
+		messageHistory.push(JSON.stringify(parsedResponse, null, 2));
+		messageHistory = messageHistory;
+	}
+
+	async function sendPrompt() {
 		if (currentResponseChunks.length) {
 			messageHistory.push(currentResponseChunks.join(''));
 		}
@@ -46,14 +71,14 @@
 		{/if}
 		<div class="w-screen flex-1 overflow-y-scroll px-4">
 			{#each messageHistory as message}
-				<p class="mb-2 border-b-2">{message}</p>
+				<pre class="mb-2 border-b-2">{message}</pre>
 			{/each}
-			<p>
+			<pre>
 				{#each currentResponseChunks as chunk}
 					{chunk}
 				{/each}
-			</p>
+			</pre>
 		</div>
-		<PromptInput bind:prompt on:submit={send} />
+		<PromptInput bind:prompt on:submit={submitInput} />
 	</section>
 </main>
